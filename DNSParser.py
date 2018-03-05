@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup as soup
 from urllib.request import urlopen
 import subprocess
 import re
+import time
 
 # I picked this website at random.
 dns_html = urlopen('https://www.lifewire.com/free-and-public-dns-servers-2626062/')
@@ -42,28 +43,13 @@ for server in servers:
 print("Testing connection...")
 
 for key in dns_dict:
-    # If ping exits with a non-zero exit code check_output will throw an exception.
-    # This simply means that either the server is unreachable or
-    # it drops ICMP Echo requests
-    try:
-        # This will return the literal response from ping as byte type objects
-        response = subprocess.check_output("ping -4 " + dns_dict[key]['Primary'], shell=False, universal_newlines=False).splitlines()
 
-    except subprocess.CalledProcessError:
-        # For the purposes of this script we can just set the latency
-        # to a silly value for a lazy way avoid any sorting issues while ensuring
-        # it will never end up in the top 5
-        print('{} is unreachable or did not respond'.format(key))
-        dns_dict[key]['Latency'] = 9999
-        continue
+    start = time.time()
+    subprocess.check_output("nslookup test.com " + dns_dict[key]['Primary'], shell=False, universal_newlines=False)
+    end = time.time()
 
-    for i in response:
-        #  The last line of ping begins with "Minimum" every time and ends with what we want "Average"
-        if b'Minimum' in i:
-            # Finds the Average latency. Converts it to string, then we get just the digits and convert to int
-            avg = int(re.search(r'\d+', str(re.findall(b'Average =\s\d*', i))).group())
+    dns_dict[key]['Latency'] = end-start
 
-            dns_dict[key]['Latency'] = avg
 
 top5 = []
 
@@ -81,5 +67,5 @@ for name, ip, lat in top5:
     Name: {}\n
     IP: {}\n
     Latency: {}ms\n
-    '''.format(name, ip, lat))
+    '''.format(name, ip, lat*100))
 
