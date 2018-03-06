@@ -67,5 +67,5 @@ for name, ip, lat in top5:
     Name: {}\n
     IP: {}\n
     Latency: {}ms\n
-    '''.format(name, ip, lat*100))
+    '''.format(name, ip, lat*1000))
 
