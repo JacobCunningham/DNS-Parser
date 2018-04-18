@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup as soup
+from scapy.all import *
 from urllib.request import urlopen
-import subprocess
 import re
 import time
 
@@ -53,10 +53,11 @@ for server in servers:
 print("Testing connection...")
 
 for key in nsinfo:
+
     # runs an nslookup process to time the servers response and suppresses the processes output
-    start = time.time()
-    subprocess.run("nslookup test.com " + nsinfo[key]['Primary'], shell=False, stdout=subprocess.DEVNULL)
-    end = time.time()
+    start = time.clock()
+    sr1(IP(dst=nsinfo[key]['Primary'])/UDP(dport=53)/DNS(rd=1,qd=DNSQR(qname="www.test.com")),verbose=1, timeout=10)
+    end = time.clock()
 
     # This will be a relative speed. I have not tested the overhead of the run() function
     nsinfo[key]['Latency'] = end - start
